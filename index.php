@@ -53,7 +53,7 @@ function getOTA($device, $type) {
             if ($data['response']) return $data['response'];
             break;
         case 'aicp':
-            if (!$data['error']) return $data['updates'];
+            if (!array_key_exists('error', $data)) return $data['updates'];
             break;
         case 'mokee':
             if ($data) return $data;
