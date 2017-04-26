@@ -1,14 +1,10 @@
 <?php
 require 'vendor/autoload.php';
 
-Flight::route('/', function(){
-    echo 'hello world!';
-});
-
 Flight::route('/@device/@rom_type(/@flag:lastest)', function($device, $rom_type, $flag){
     if (!in_array($rom_type, array('aicp', 'los', 'mokee'))) Flight::halt(400, Flight::json(array('msg' => "$rom_type: No such ROM")));
     $data = getOTA($device, $rom_type);
-    if ($data['msg']) Flight::halt(400, Flight::json($data));
+    if (array_key_exists('msg', $data)) Flight::halt(400, Flight::json($data));
     if ($flag == 'lastest') {
         $temp = $data[0];
         unset($data);
@@ -99,4 +95,18 @@ function formatBytes($size) {
     $units = array(' B', ' KB', ' MB', ' GB', ' TB'); 
     for ($i = 0; $size >= 1024 && $i < 4; $i++) $size /= 1024; 
     return round($size, 2).$units[$i]; 
+}
+
+function getSize($url) {
+     $ch = curl_init($url);
+
+     curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+     curl_setopt($ch, CURLOPT_HEADER, TRUE);
+     curl_setopt($ch, CURLOPT_NOBODY, TRUE);
+
+     $data = curl_exec($ch);
+     $size = curl_getinfo($ch, CURLINFO_CONTENT_LENGTH_DOWNLOAD);
+
+     curl_close($ch);
+     return formatBytes($size);
 }
