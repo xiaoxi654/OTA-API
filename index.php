@@ -6,7 +6,9 @@ Flight::route('/', function(){
 });
 
 Flight::route('/@device/@rom_type(/@flag:lastest)', function($device, $rom_type, $flag){
+    if (!in_array($rom_type, array('aicp', 'los', 'mokee'))) Flight::halt(400, Flight::json(array('msg' => "$rom_type: No such ROM")));
     $data = getOTA($device, $rom_type);
+    if ($data['msg']) Flight::halt(400, Flight::json($data));
     if ($flag == 'lastest') {
         $temp = $data[0];
         unset($data);
@@ -45,8 +47,6 @@ function getOTA($device, $type) {
             $url = 'http://ota.mokeedev.com/full.php';
             $data = "device_name=$device&device_officail=1&device_version=mk";
             break;
-        default:
-            return 'Unknown Error';
     }
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -54,14 +54,18 @@ function getOTA($device, $type) {
     $data = json_decode(curl_exec($ch),true);
     switch($type) {
         case 'los':
-            return $data['response'];
+            if ($data['response']) return $data['response'];
             break;
         case 'aicp':
-            return $data['updates'];
+            if (!$data['error']) return $data['updates'];
+            break;
+        case 'mokee':
+            if ($data) return $data;
             break;
         default:
-            return $data;
+            return array('msg' => 'Unknow Error');
     }
+    return array('msg' => "$device: No such device");
 }
 
 function formatLOS($data) {
