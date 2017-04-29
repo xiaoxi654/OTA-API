@@ -1,15 +1,10 @@
 <?php
 require 'vendor/autoload.php';
 
-Flight::route('/@device/@rom_type(/@flag:lastest)', function($device, $rom_type, $flag){
+Flight::route('/@device/@rom_type(/@flag)', function($device, $rom_type, $flag){
     if (!in_array($rom_type, array('aicp', 'los', 'mokee'))) Flight::halt(400, Flight::json(array('msg' => "$rom_type: No such ROM")));
-    $data = getOTA($device, $rom_type);
+    $data = getOTA($device, $rom_type, $flag);
     if (array_key_exists('msg', $data)) Flight::halt(400, Flight::json($data));
-    if ($flag == 'lastest') {
-        $temp = $data[0];
-        unset($data);
-        $data []= $temp;
-    }
     switch($rom_type) {
         case 'los':
             $result = array_map('formatLOS', $data);
@@ -31,7 +26,8 @@ Flight::route('*', function(){
 
 Flight::start();
 
-function getOTA($device, $type) {
+function getOTA($device, $type, $flag = NULL) {
+    $error = false;
     switch($type) {
         case 'los':
             $url = "https://download.lineageos.org/api/v1/$device/nightly/get";
@@ -50,18 +46,31 @@ function getOTA($device, $type) {
     $data = json_decode(curl_exec($ch),true);
     switch($type) {
         case 'los':
-            if ($data['response']) return $data['response'];
+            if ($data['response']) $data = $data['response'];
+            else $error = true;
             break;
         case 'aicp':
-            if (!array_key_exists('error', $data)) return $data['updates'];
+            if (!array_key_exists('error', $data)) $data = $data['updates'];
+            else $error = true;
             break;
         case 'mokee':
-            if ($data) return $data;
+            if (count($data) == 0) $error = true;
             break;
         default:
             return array('msg' => 'Unknow Error');
     }
-    return array('msg' => "$device: No such device");
+    if ($error) return array('code' => 404, 'msg' => "No $type rom for $device");
+    else switch($flag) {
+        case 'check':
+            return array('code' => 200, 'msg' => "success");
+            break;
+        case 'lastest':
+            $result []= $data[0];
+            return $result;
+            break;
+        default:
+            return $data;
+    }
 }
 
 function formatLOS($data) {
