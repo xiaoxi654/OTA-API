@@ -62,7 +62,7 @@ function getOTA($device, $type, $flag = NULL) {
     if ($error) return array('code' => 404, 'msg' => "No $type rom for $device");
     else switch($flag) {
         case 'check':
-            return array('code' => 200, 'msg' => "success");
+            return array('code' => 200, 'msg' => "Success");
             break;
         case 'lastest':
             $result []= $data[0];
@@ -106,16 +106,17 @@ function formatBytes($size) {
     return round($size, 2).$units[$i]; 
 }
 
-function getSize($url) {
-     $ch = curl_init($url);
+// Prepare for LineageOS
+// function getSize($url) {
+//      $ch = curl_init($url);
 
-     curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-     curl_setopt($ch, CURLOPT_HEADER, TRUE);
-     curl_setopt($ch, CURLOPT_NOBODY, TRUE);
+//      curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+//      curl_setopt($ch, CURLOPT_HEADER, TRUE);
+//      curl_setopt($ch, CURLOPT_NOBODY, TRUE);
 
-     $data = curl_exec($ch);
-     $size = curl_getinfo($ch, CURLINFO_CONTENT_LENGTH_DOWNLOAD);
+//      $data = curl_exec($ch);
+//      $size = curl_getinfo($ch, CURLINFO_CONTENT_LENGTH_DOWNLOAD);
 
-     curl_close($ch);
-     return formatBytes($size);
-}
+//      curl_close($ch);
+//      return formatBytes($size);
+// }
