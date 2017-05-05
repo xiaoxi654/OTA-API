@@ -2,7 +2,7 @@
 require 'vendor/autoload.php';
 
 Flight::route('/@device/@rom_type(/@flag)', function($device, $rom_type, $flag){
-    if (!in_array($rom_type, array('aicp', 'los', 'mokee'))) Flight::halt(400, Flight::json(array('msg' => "$rom_type: No such ROM")));
+    if (!in_array($rom_type, array('aicp', 'los', 'mokee'))) Flight::halt(400, Flight::json(array('code' => 404, 'msg' => "$rom_type: No such ROM")));
     $data = getOTA($device, $rom_type, $flag);
     if (array_key_exists('msg', $data)) Flight::halt(400, Flight::json($data));
     switch($rom_type) {
@@ -46,7 +46,7 @@ function getOTA($device, $type, $flag = NULL) {
     $data = json_decode(curl_exec($ch),true);
     switch($type) {
         case 'los':
-            if ($data['response']) $data = $data['response'];
+            if ($data['response']) $data = array_reverse($data['response']);
             else $error = true;
             break;
         case 'aicp':
@@ -55,6 +55,7 @@ function getOTA($device, $type, $flag = NULL) {
             break;
         case 'mokee':
             if (count($data) == 0) $error = true;
+            else $data = array_reverse($data);
             break;
         default:
             return array('msg' => 'Unknow Error');
