@@ -21,7 +21,7 @@ Flight::route('/@device/@rom_type(/@flag)', function($device, $rom_type, $flag){
 });
 
 Flight::route('*', function(){
-    Flight::halt(400, '<h1>Bad Request</h1>');
+    Flight::halt(400, Flight::json(array('code' => 400, 'msg' => 'Bad Request')));
 });
 
 Flight::start();
@@ -58,7 +58,7 @@ function getOTA($device, $type, $flag = NULL) {
             else $data = array_reverse($data);
             break;
         default:
-            return array('msg' => 'Unknow Error');
+            return array('code' => 500, 'msg' => 'Unknow Error');
     }
     if ($error) return array('code' => 404, 'msg' => "No $type rom for $device");
     else switch($flag) {
